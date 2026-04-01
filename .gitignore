@@ -1,0 +1,4 @@
+vocab.db
+__pycache__/
+*.pyc
+.env
