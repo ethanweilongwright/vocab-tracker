@@ -1,18 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
-<div style="display:flex;align-items:baseline;gap:1rem;margin-bottom:1.5rem">
-    <h1 style="margin-bottom:0">{{ word.japanese }}</h1>
-    <span style="font-size:1.2rem;color:#64748b">{{ word.reading }}</span>
-    <a class="btn btn-secondary" href="/words/{{ word.id }}/edit" style="margin-left:auto">Edit</a>
+
+<div class="word-detail-header">
+    <div>
+        <h1 style="margin-bottom:0.2rem">{{ word.japanese }}</h1>
+        <span class="word-reading">{{ word.reading }}</span>
+    </div>
+    <a class="btn btn-secondary" href="/words/{{ word.id }}/edit">Edit</a>
 </div>
-<p style="font-size:1.1rem;color:#334155;margin-bottom:0.4rem">{{ word.meaning }}</p>
+
+<p class="word-meaning">{{ word.meaning }}</p>
 {% if tags %}
-<p style="margin-bottom:1.5rem">
+<p class="word-tags">
     {% for tag in tags %}<span class="{{ tag | tag_class }}">{{ tag }}</span>{% endfor %}
 </p>
 {% endif %}
 
-<div class="stats-grid" style="margin-bottom:2rem">
+<div class="stats-grid">
     <div class="stat-card">
         <div class="stat-number">{{ total }}</div>
         <div class="stat-label">Reviews</div>
@@ -48,7 +52,7 @@
     {% endfor %}
 </div>
 {% else %}
-<p style="color:#94a3b8;font-size:.9rem">No example sentences found.</p>
+<p class="muted-note">No example sentences found.</p>
 {% endif %}
 
 <h2>Review History</h2>
@@ -72,10 +76,10 @@
     </tbody>
 </table>
 {% else %}
-<p>No reviews yet. <a href="/quiz">Start a quiz!</a></p>
+<p class="muted-note">No reviews yet. <a href="/quiz">Start a quiz!</a></p>
 {% endif %}
 
-<div style="margin-top:1.5rem">
+<div style="margin-top:1.75rem">
     <a class="btn btn-secondary" href="/words">← Back to Words</a>
 </div>
 {% endblock %}

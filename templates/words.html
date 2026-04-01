@@ -49,6 +49,13 @@
 
 </div>{# end .words-layout #}
 
+{# ── Search bar ── #}
+<form class="search-bar" method="GET" action="/words">
+    {% if active_tag %}<input type="hidden" name="tag" value="{{ active_tag }}">{% endif %}
+    <input type="text" name="q" value="{{ active_q }}" placeholder="Search words…" autocomplete="off">
+    {% if active_q %}<a class="btn btn-secondary" href="/words{% if active_tag %}?tag={{ active_tag }}{% endif %}">Clear</a>{% endif %}
+</form>
+
 {# ── Filter tabs + table ── #}
 {% set jlpt_tags = all_tags | selectattr('name', 'in', ['N5','N4','N3','N2','N1']) | list %}
 {% if jlpt_tags %}

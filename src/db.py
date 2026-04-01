@@ -119,6 +119,24 @@ def set_word_tags(conn, word_id, tag_names):
     conn.commit()
 
 
+def search_words(conn, query, tag=None):
+    pattern = f"%{query}%"
+    if tag:
+        return conn.execute("""
+            SELECT DISTINCT w.* FROM words w
+            JOIN word_tags wt ON wt.word_id = w.id
+            JOIN tags t ON t.id = wt.tag_id
+            WHERE t.name = ?
+              AND (w.japanese LIKE ? OR w.reading LIKE ? OR w.meaning LIKE ?)
+            ORDER BY w.created_at DESC
+        """, (tag, pattern, pattern, pattern)).fetchall()
+    return conn.execute("""
+        SELECT * FROM words
+        WHERE japanese LIKE ? OR reading LIKE ? OR meaning LIKE ?
+        ORDER BY created_at DESC
+    """, (pattern, pattern, pattern)).fetchall()
+
+
 def get_word_reviews(conn, word_id):
     return conn.execute(
         "SELECT reviewed_at, correct FROM reviews WHERE word_id = ? ORDER BY reviewed_at DESC",

@@ -1,6 +1,6 @@
 import sqlite3
 import pytest
-from src.db import init_db, migrate_db, add_word, get_all_words, get_word_by_id, update_word, delete_word, update_word_schedule, get_all_tags, get_tags_for_word, set_word_tags, get_word_reviews
+from src.db import init_db, migrate_db, add_word, get_all_words, search_words, get_word_by_id, update_word, delete_word, update_word_schedule, get_all_tags, get_tags_for_word, set_word_tags, get_word_reviews
 
 
 @pytest.fixture
@@ -167,3 +167,60 @@ def test_migrate_db_idempotent(conn):
     # running migrate again should not raise
     migrate_db(conn)
     migrate_db(conn)
+
+
+# --- search_words ---
+
+def test_search_words_by_japanese(conn):
+    id1 = add_word(conn, "食べる", "たべる", "to eat")
+    add_word(conn, "犬", "いぬ", "dog")
+    results = search_words(conn, "食")
+    assert len(results) == 1
+    assert results[0]["id"] == id1
+
+
+def test_search_words_by_reading(conn):
+    id1 = add_word(conn, "食べる", "たべる", "to eat")
+    add_word(conn, "犬", "いぬ", "dog")
+    results = search_words(conn, "たべ")
+    assert len(results) == 1
+    assert results[0]["id"] == id1
+
+
+def test_search_words_by_meaning(conn):
+    add_word(conn, "食べる", "たべる", "to eat")
+    id2 = add_word(conn, "犬", "いぬ", "dog")
+    results = search_words(conn, "dog")
+    assert len(results) == 1
+    assert results[0]["id"] == id2
+
+
+def test_search_words_partial_match(conn):
+    add_word(conn, "食べる", "たべる", "to eat")
+    add_word(conn, "飲む", "のむ", "to drink")
+    results = search_words(conn, "to")
+    assert len(results) == 2
+
+
+def test_search_words_no_results(conn):
+    add_word(conn, "食べる", "たべる", "to eat")
+    results = search_words(conn, "xyz_no_match")
+    assert results == []
+
+
+def test_search_words_empty_query_returns_all(conn):
+    add_word(conn, "食べる", "たべる", "to eat")
+    add_word(conn, "犬", "いぬ", "dog")
+    results = search_words(conn, "")
+    assert len(results) == 2
+
+
+def test_search_words_stacked_with_tag(conn):
+    id1 = add_word(conn, "食べる", "たべる", "to eat")
+    id2 = add_word(conn, "犬", "いぬ", "dog")
+    set_word_tags(conn, id1, ["N5"])
+    set_word_tags(conn, id2, ["N5"])
+    # search "eat" within N5 tag — only 食べる matches
+    results = search_words(conn, "eat", tag="N5")
+    assert len(results) == 1
+    assert results[0]["id"] == id1

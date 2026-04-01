@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
-from src.db import get_connection, init_db, migrate_db, add_word, get_all_words, get_word_by_id, update_word, delete_word, update_word_schedule, get_all_tags, get_tags_for_word, set_word_tags, get_word_reviews
+from src.db import get_connection, init_db, migrate_db, add_word, get_all_words, search_words, get_word_by_id, update_word, delete_word, update_word_schedule, get_all_tags, get_tags_for_word, set_word_tags, get_word_reviews
 from src.sentences import get_sentences
 from src.imex import export_csv, parse_csv, parse_lines
 from src.quiz import get_due_word
@@ -69,10 +69,14 @@ def index():
 def words():
     conn = get_db()
     active_tag = request.args.get("tag", "")
-    all_words = get_all_words(conn, tag=active_tag or None)
+    active_q   = request.args.get("q", "").strip()
+    if active_q:
+        all_words = search_words(conn, active_q, tag=active_tag or None)
+    else:
+        all_words = get_all_words(conn, tag=active_tag or None)
     word_tags = {w["id"]: [r["name"] for r in get_tags_for_word(conn, w["id"])] for w in all_words}
     return render_template("words.html", words=all_words, word_tags=word_tags,
-                           all_tags=get_all_tags(conn), active_tag=active_tag)
+                           all_tags=get_all_tags(conn), active_tag=active_tag, active_q=active_q)
 
 
 @app.route("/words/add", methods=["POST"])
