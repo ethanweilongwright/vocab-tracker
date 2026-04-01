@@ -8,7 +8,7 @@
 </head>
 <body>
     <nav>
-        <span class="brand">語彙 Tracker</span>
+        <a href="/" class="brand">語彙 Tracker</a>
         <a href="/"      class="{{ 'active' if request.path == '/' }}">Dashboard</a>
         <a href="/words" class="{{ 'active' if request.path.startswith('/words') }}">Words</a>
         <a href="/quiz"  class="{{ 'active' if request.path.startswith('/quiz') }}">Quiz</a>

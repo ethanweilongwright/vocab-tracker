@@ -41,10 +41,16 @@ def add_word(conn, japanese, reading, meaning):
     return cursor.lastrowid
 
 
-def get_all_words(conn):
-    return conn.execute(
-        "SELECT * FROM words ORDER BY created_at DESC"
-    ).fetchall()
+def get_all_words(conn, tag=None):
+    if tag:
+        return conn.execute("""
+            SELECT DISTINCT w.* FROM words w
+            JOIN word_tags wt ON wt.word_id = w.id
+            JOIN tags t ON t.id = wt.tag_id
+            WHERE t.name = ?
+            ORDER BY w.created_at DESC
+        """, (tag,)).fetchall()
+    return conn.execute("SELECT * FROM words ORDER BY created_at DESC").fetchall()
 
 
 def get_word_by_id(conn, word_id):
@@ -71,12 +77,53 @@ def migrate_db(conn):
     for sql in [
         "ALTER TABLE words ADD COLUMN interval_days REAL DEFAULT 1.0",
         "ALTER TABLE words ADD COLUMN next_review_at TEXT DEFAULT (datetime('now'))",
+        """CREATE TABLE IF NOT EXISTS tags (
+            id   INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE
+        )""",
+        """CREATE TABLE IF NOT EXISTS word_tags (
+            word_id INTEGER NOT NULL REFERENCES words(id),
+            tag_id  INTEGER NOT NULL REFERENCES tags(id),
+            PRIMARY KEY (word_id, tag_id)
+        )""",
     ]:
         try:
             conn.execute(sql)
         except Exception:
-            pass  # column already exists
+            pass  # column/table already exists
     conn.commit()
+
+
+def get_all_tags(conn):
+    return conn.execute("SELECT * FROM tags ORDER BY name").fetchall()
+
+
+def get_tags_for_word(conn, word_id):
+    return conn.execute("""
+        SELECT t.name FROM tags t
+        JOIN word_tags wt ON wt.tag_id = t.id
+        WHERE wt.word_id = ?
+        ORDER BY t.name
+    """, (word_id,)).fetchall()
+
+
+def set_word_tags(conn, word_id, tag_names):
+    conn.execute("DELETE FROM word_tags WHERE word_id = ?", (word_id,))
+    for name in tag_names:
+        name = name.strip()
+        if not name:
+            continue
+        conn.execute("INSERT OR IGNORE INTO tags (name) VALUES (?)", (name,))
+        tag_id = conn.execute("SELECT id FROM tags WHERE name = ?", (name,)).fetchone()["id"]
+        conn.execute("INSERT OR IGNORE INTO word_tags (word_id, tag_id) VALUES (?, ?)", (word_id, tag_id))
+    conn.commit()
+
+
+def get_word_reviews(conn, word_id):
+    return conn.execute(
+        "SELECT reviewed_at, correct FROM reviews WHERE word_id = ? ORDER BY reviewed_at DESC",
+        (word_id,)
+    ).fetchall()
 
 
 def update_word_schedule(conn, word_id, correct):

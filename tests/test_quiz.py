@@ -1,6 +1,6 @@
 import sqlite3
 import pytest
-from src.db import init_db, migrate_db, add_word, update_word_schedule
+from src.db import init_db, migrate_db, add_word, update_word_schedule, set_word_tags
 from src.quiz import get_due_word
 
 
@@ -48,15 +48,51 @@ def test_get_due_word_picks_most_overdue(conn):
     assert word["id"] == id1
 
 
+def test_get_due_word_filters_by_tag(conn):
+    id1 = add_word(conn, "食べる", "たべる", "to eat")
+    id2 = add_word(conn, "犬", "いぬ", "dog")
+    set_word_tags(conn, id1, ["verbs"])
+    set_word_tags(conn, id2, ["nouns"])
+    word = get_due_word(conn, tag="verbs")
+    assert word["id"] == id1
+
+
+def test_get_due_word_tag_no_match_returns_none(conn):
+    word_id = add_word(conn, "食べる", "たべる", "to eat")
+    set_word_tags(conn, word_id, ["verbs"])
+    assert get_due_word(conn, tag="nouns") is None
+
+
 def test_fuzzy_matching():
     # Test the fuzzy logic used in quiz_flow directly
-    def is_correct(answer, meaning):
+    def is_correct(answer, target):
         a = answer.strip().lower()
-        m = meaning.lower()
-        return a in m or m in a
+        t = target.lower()
+        return a in t or t in a
 
     assert is_correct("eat", "to eat")
     assert is_correct("to eat", "eat")
     assert is_correct("to eat", "to eat")
     assert not is_correct("drink", "to eat")
     assert is_correct("drink", "to drink")
+
+
+def test_reverse_mode_correct_answer_is_reading():
+    # In reverse mode the target is the reading, not the meaning
+    def is_correct(answer, target):
+        a = answer.strip().lower()
+        t = target.lower()
+        return a in t or t in a
+
+    assert is_correct("たべる", "たべる")
+    assert not is_correct("to eat", "たべる")
+
+
+def test_reverse_mode_wrong_meaning_not_accepted():
+    def is_correct(answer, target):
+        a = answer.strip().lower()
+        t = target.lower()
+        return a in t or t in a
+
+    # Giving the English meaning should not be accepted in reverse mode
+    assert not is_correct("to eat", "たべる")

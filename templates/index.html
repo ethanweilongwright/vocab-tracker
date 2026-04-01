@@ -23,6 +23,45 @@
         <div class="stat-number">{{ streak }}</div>
         <div class="stat-label">Day Streak</div>
     </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ due_count }}</div>
+        <div class="stat-label">Due for Review</div>
+    </div>
+</div>
+
+{% if jlpt_breakdown.values() | sum > 0 %}
+<div class="jlpt-row">
+    {% for level, count in jlpt_breakdown.items() %}
+    <a href="/words?tag={{ level }}" class="jlpt-badge tag-{{ level | lower }}">
+        <span class="jlpt-level">{{ level }}</span>
+        <span class="jlpt-count">{{ count }}</span>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% set max_count = daily_reviews | map(attribute='count') | max %}
+{% set total_month = daily_reviews | map(attribute='count') | sum %}
+{% set today_str = daily_reviews[-1].date %}
+<div class="chart-wrap">
+    <div class="chart-header">
+        <span>Reviews — last 30 days</span>
+        <span class="chart-total">{{ total_month }} total</span>
+    </div>
+    <div class="sparkline">
+        {% for day in daily_reviews %}
+        {% set height = ((day.count / max_count * 100) | int) if max_count > 0 else 0 %}
+        <div class="spark-bar-wrap {{ 'spark-today' if day.date == today_str else '' }}"
+             title="{{ day.date | fmt_date }}: {{ day.count }} review{{ 's' if day.count != 1 else '' }}">
+            <div class="spark-bar" style="height: {{ height }}%"></div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="spark-axis">
+        <span>{{ daily_reviews[0].date | fmt_date }}</span>
+        <span>{{ daily_reviews[14].date | fmt_date }}</span>
+        <span>Today</span>
+    </div>
 </div>
 
 <h2>Accuracy by Word</h2>

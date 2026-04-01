@@ -10,6 +10,8 @@
         <input type="text" name="reading" value="{{ word.reading }}" required>
         <label>Meaning</label>
         <input type="text" name="meaning" value="{{ word.meaning }}" required>
+        <label>Tags <span style="color:gray;font-size:.85em">(comma-separated)</span></label>
+        <input type="text" name="tags" value="{{ word_tags | join(', ') }}">
         <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
             <button class="btn btn-primary" type="submit">Save</button>
             <a class="btn btn-secondary" href="/words">Cancel</a>

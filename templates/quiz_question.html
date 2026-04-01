@@ -3,13 +3,18 @@
 <h1>Quiz <span class="progress-label">{{ current }}/{{ total }}</span></h1>
 
 <div class="quiz-card">
+    {% if mode == "reverse" %}
+    <div class="quiz-word">{{ word.meaning }}</div>
+    {% else %}
     <div class="quiz-word">{{ word.japanese }}</div>
     <div class="quiz-reading">{{ word.reading }}</div>
+    {% endif %}
 
     <form method="POST" action="/quiz/answer" id="quiz-form">
         <input type="hidden" name="word_id" value="{{ word.id }}">
         <input type="text" name="answer" id="answer-input"
-               placeholder="Type the meaning..." autocomplete="off" autofocus>
+               placeholder="{{ 'Type the reading (hiragana)...' if mode == 'reverse' else 'Type the meaning...' }}"
+               autocomplete="off" autofocus>
         <button class="btn btn-primary" type="submit">Submit</button>
         <p class="hint">Press Enter to submit</p>
     </form>

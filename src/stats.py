@@ -30,6 +30,42 @@ def get_streak(conn):
     return streak
 
 
+def get_daily_reviews(conn, days=30):
+    rows = conn.execute("""
+        SELECT substr(reviewed_at, 1, 10) as day, COUNT(*) as count
+        FROM reviews
+        WHERE reviewed_at >= date('now', ?)
+        GROUP BY day
+    """, (f"-{days} days",)).fetchall()
+    counts = {row["day"]: row["count"] for row in rows}
+    today = datetime.now().date()
+    return [
+        {"date": str(today - timedelta(days=i)), "count": counts.get(str(today - timedelta(days=i)), 0)}
+        for i in range(days - 1, -1, -1)
+    ]
+
+
+JLPT_LEVELS = ["N5", "N4", "N3", "N2", "N1"]
+
+
+def get_jlpt_breakdown(conn):
+    rows = conn.execute("""
+        SELECT t.name, COUNT(DISTINCT wt.word_id) as count
+        FROM tags t
+        JOIN word_tags wt ON wt.tag_id = t.id
+        WHERE t.name IN ('N5','N4','N3','N2','N1')
+        GROUP BY t.name
+    """).fetchall()
+    counts = {r["name"]: r["count"] for r in rows}
+    return {level: counts.get(level, 0) for level in JLPT_LEVELS}
+
+
+def get_due_count(conn):
+    return conn.execute(
+        "SELECT COUNT(*) FROM words WHERE next_review_at <= datetime('now')"
+    ).fetchone()[0]
+
+
 def get_accuracy_by_word(conn):
     return conn.execute("""
         SELECT w.japanese, w.reading,

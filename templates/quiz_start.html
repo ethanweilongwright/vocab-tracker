@@ -4,8 +4,22 @@
 
 <div class="form-card">
     <form method="POST" action="/quiz/start">
+        <label>Mode</label>
+        <select name="mode">
+            <option value="normal">Japanese → English</option>
+            <option value="reverse">English → Japanese (reading)</option>
+        </select>
         <label>How many words to review?</label>
         <input type="number" name="count" min="1" max="100" value="10" required>
+        {% if all_tags %}
+        <label>Filter by tag (optional)</label>
+        <select name="tag">
+            <option value="">All words</option>
+            {% for tag in all_tags %}
+            <option value="{{ tag.name }}">{{ tag.name }}</option>
+            {% endfor %}
+        </select>
+        {% endif %}
         <button class="btn btn-primary" type="submit">Start Quiz</button>
     </form>
 </div>

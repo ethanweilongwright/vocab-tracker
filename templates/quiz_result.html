@@ -3,11 +3,15 @@
 <h1>Quiz <span class="progress-label">{{ current }}/{{ total }}</span></h1>
 
 <div class="quiz-card result {{ 'correct' if correct else 'wrong' }}">
+    {% if mode == "reverse" %}
+    <div class="quiz-word">{{ word.meaning }}</div>
+    {% else %}
     <div class="quiz-word">{{ word.japanese }}</div>
     <div class="quiz-reading">{{ word.reading }}</div>
+    {% endif %}
     <div class="result-label">{{ 'Correct!' if correct else 'Wrong' }}</div>
     {% if not correct %}
-    <div class="correct-answer">Answer: <strong>{{ word.meaning }}</strong></div>
+    <div class="correct-answer">Answer: <strong>{{ word.reading if mode == "reverse" else word.meaning }}</strong></div>
     {% endif %}
     <a class="btn btn-primary" href="/quiz/next">Next</a>
     <p class="hint">Press Enter to continue</p>

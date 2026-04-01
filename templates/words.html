@@ -2,18 +2,63 @@
 {% block content %}
 <h1>Words</h1>
 
-<div class="form-card">
-    <h2>Add Word</h2>
-    <form method="POST" action="/words/add">
-        <label>Japanese</label>
-        <input type="text" name="japanese" placeholder="食べる" required>
-        <label>Reading</label>
-        <input type="text" name="reading" placeholder="たべる" required>
-        <label>Meaning</label>
-        <input type="text" name="meaning" placeholder="to eat" required>
-        <button class="btn btn-primary" type="submit">Add Word</button>
-    </form>
+<div class="words-layout">
+
+    {# ── Left: Search + Add (primary flow) ── #}
+    <div class="form-card words-primary">
+        <h2>Add Word</h2>
+        <div style="display:flex;gap:.5rem;margin-bottom:.5rem">
+            <input id="dict-search" type="text" placeholder="Search Jisho to auto-fill…" style="flex:1;margin-bottom:0">
+            <button class="btn btn-secondary" type="button" onclick="dictSearch()">Search</button>
+        </div>
+        <p id="dict-status" style="color:gray;font-size:.82em;min-height:1.2em;margin-bottom:.6rem"></p>
+        <form method="POST" action="/words/add">
+            <label>Japanese</label>
+            <input type="text" name="japanese" placeholder="食べる" required>
+            <label>Reading</label>
+            <input type="text" name="reading" placeholder="たべる" required>
+            <label>Meaning</label>
+            <input type="text" name="meaning" placeholder="to eat" required>
+            <label>Tags <span style="color:#94a3b8;font-size:.82em">(comma-separated)</span></label>
+            <input type="text" name="tags" id="tags-input" placeholder="N5, verbs">
+            <button class="btn btn-primary" type="submit">Add Word</button>
+        </form>
+    </div>
+
+    {# ── Right: Bulk Add + Import/Export (secondary) ── #}
+    <div class="words-secondary">
+        <div class="form-card" style="margin-bottom:1rem">
+            <h2>Bulk Add</h2>
+            <p style="font-size:.82rem;color:#94a3b8;margin-bottom:.6rem">One per line: <code>japanese, reading, meaning</code></p>
+            <form method="POST" action="/words/bulk_add">
+                <textarea name="bulk_text" rows="5" placeholder="食べる, たべる, to eat&#10;飲む, のむ, to drink&#10;犬, いぬ, dog"></textarea>
+                <button class="btn btn-primary" type="submit">Add All</button>
+            </form>
+        </div>
+
+        <div class="form-card">
+            <h2>Import / Export</h2>
+            <p style="font-size:.82rem;color:#94a3b8;margin-bottom:.75rem">CSV: japanese, reading, meaning, tags</p>
+            <a class="btn btn-secondary" href="/words/export.csv" style="display:block;text-align:center;margin-bottom:.6rem">Export CSV</a>
+            <form method="POST" action="/words/import" enctype="multipart/form-data">
+                <input type="file" name="csv_file" accept=".csv" style="font-size:.85rem;margin-bottom:.5rem">
+                <button class="btn btn-primary" type="submit" style="width:100%">Import CSV</button>
+            </form>
+        </div>
+    </div>
+
+</div>{# end .words-layout #}
+
+{# ── Filter tabs + table ── #}
+{% set jlpt_tags = all_tags | selectattr('name', 'in', ['N5','N4','N3','N2','N1']) | list %}
+{% if jlpt_tags %}
+<div class="filter-tabs">
+    <a href="/words" class="filter-tab {{ 'active' if not active_tag else '' }}">All</a>
+    {% for t in jlpt_tags %}
+    <a href="/words?tag={{ t.name }}" class="filter-tab tag-{{ t.name | lower }} {{ 'active' if active_tag == t.name else '' }}">{{ t.name }}</a>
+    {% endfor %}
 </div>
+{% endif %}
 
 {% if words %}
 <table>
@@ -24,17 +69,21 @@
             <th>Meaning</th>
             <th>Interval</th>
             <th>Next Review</th>
+            <th>Tags</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         {% for word in words %}
         <tr>
-            <td>{{ word.japanese }}</td>
+            <td><a href="/words/{{ word.id }}" class="word-link">{{ word.japanese }}</a></td>
             <td>{{ word.reading }}</td>
             <td>{{ word.meaning }}</td>
-            <td>{{ "%.1f"|format(word.interval_days or 1.0) }}d</td>
-            <td>{{ (word.next_review_at or "")[:10] }}</td>
+            {% set iv = word.interval_days or 1.0 %}
+            <td>{{ iv | int if iv == iv | int else "%.1f" | format(iv) }}d</td>
+            {% set rel = word.next_review_at | relative_date %}
+            <td class="date-cell {{ 'date-overdue' if 'overdue' in rel else ('date-today' if rel == 'Today' else '') }}">{{ rel }}</td>
+            <td>{% for t in word_tags[word.id] %}<span class="{{ t | tag_class }}">{{ t }}</span>{% endfor %}</td>
             <td>
                 <a class="btn btn-secondary" href="/words/{{ word.id }}/edit">Edit</a>
                 <form class="inline" method="POST" action="/words/{{ word.id }}/delete"
@@ -49,4 +98,25 @@
 {% else %}
 <p>No words yet. Add your first one above!</p>
 {% endif %}
+
+<script>
+async function dictSearch() {
+    const q = document.getElementById("dict-search").value.trim();
+    if (!q) return;
+    const status = document.getElementById("dict-status");
+    status.textContent = "Searching\u2026";
+    try {
+        const res = await fetch(`/words/lookup?q=${encodeURIComponent(q)}`);
+        if (!res.ok) { status.textContent = "Not found \u2014 fill in manually."; return; }
+        const data = await res.json();
+        document.querySelector('[name="japanese"]').value = data.word;
+        document.querySelector('[name="reading"]').value = data.reading;
+        document.querySelector('[name="meaning"]').value = data.meaning;
+        document.querySelector('[name="tags"]').value = (data.tags || []).join(", ");
+        status.textContent = "Form filled \u2014 review and submit.";
+    } catch {
+        status.textContent = "API unavailable \u2014 fill in manually.";
+    }
+}
+</script>
 {% endblock %}
