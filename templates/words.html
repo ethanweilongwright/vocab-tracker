@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Words</h1>
+
+<div class="form-card">
+    <h2>Add Word</h2>
+    <form method="POST" action="/words/add">
+        <label>Japanese</label>
+        <input type="text" name="japanese" placeholder="食べる" required>
+        <label>Reading</label>
+        <input type="text" name="reading" placeholder="たべる" required>
+        <label>Meaning</label>
+        <input type="text" name="meaning" placeholder="to eat" required>
+        <button class="btn btn-primary" type="submit">Add Word</button>
+    </form>
+</div>
+
+{% if words %}
+<table>
+    <thead>
+        <tr>
+            <th>Japanese</th>
+            <th>Reading</th>
+            <th>Meaning</th>
+            <th>Interval</th>
+            <th>Next Review</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for word in words %}
+        <tr>
+            <td>{{ word.japanese }}</td>
+            <td>{{ word.reading }}</td>
+            <td>{{ word.meaning }}</td>
+            <td>{{ "%.1f"|format(word.interval_days or 1.0) }}d</td>
+            <td>{{ (word.next_review_at or "")[:10] }}</td>
+            <td>
+                <a class="btn btn-secondary" href="/words/{{ word.id }}/edit">Edit</a>
+                <form class="inline" method="POST" action="/words/{{ word.id }}/delete"
+                      onsubmit="return confirm('Delete {{ word.japanese }}?')">
+                    <button class="btn btn-danger" type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No words yet. Add your first one above!</p>
+{% endif %}
+{% endblock %}

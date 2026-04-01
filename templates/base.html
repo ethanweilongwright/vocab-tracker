@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocab Tracker</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <span class="brand">語彙 Tracker</span>
+        <a href="/"      class="{{ 'active' if request.path == '/' }}">Dashboard</a>
+        <a href="/words" class="{{ 'active' if request.path.startswith('/words') }}">Words</a>
+        <a href="/quiz"  class="{{ 'active' if request.path.startswith('/quiz') }}">Quiz</a>
+    </nav>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

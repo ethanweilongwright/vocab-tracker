@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Session Complete!</h1>
+
+<div class="quiz-card">
+    <div class="stat-number">{{ correct }}/{{ total }}</div>
+    <div class="stat-label">{{ "%.0f"|format(correct / total * 100 if total > 0 else 0) }}% correct</div>
+    <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center;">
+        <a class="btn btn-primary" href="/quiz">Quiz Again</a>
+        <a class="btn btn-secondary" href="/">Dashboard</a>
+    </div>
+</div>
+{% endblock %}

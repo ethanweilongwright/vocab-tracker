@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Edit Word</h1>
+
+<div class="form-card">
+    <form method="POST" action="/words/{{ word.id }}/edit">
+        <label>Japanese</label>
+        <input type="text" name="japanese" value="{{ word.japanese }}" required>
+        <label>Reading</label>
+        <input type="text" name="reading" value="{{ word.reading }}" required>
+        <label>Meaning</label>
+        <input type="text" name="meaning" value="{{ word.meaning }}" required>
+        <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a class="btn btn-secondary" href="/words">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

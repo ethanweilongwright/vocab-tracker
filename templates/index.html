@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ summary.total_words }}</div>
+        <div class="stat-label">Total Words</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ summary.total_reviews }}</div>
+        <div class="stat-label">Total Reviews</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ "%.0f"|format(summary.accuracy * 100) }}%</div>
+        <div class="stat-label">Accuracy</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ summary.mastered_words }}</div>
+        <div class="stat-label">Mastered</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ streak }}</div>
+        <div class="stat-label">Day Streak</div>
+    </div>
+</div>
+
+<h2>Accuracy by Word</h2>
+{% if accuracy_rows %}
+<table>
+    <thead>
+        <tr>
+            <th>Japanese</th>
+            <th>Reading</th>
+            <th>Reviews</th>
+            <th>Accuracy</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in accuracy_rows %}
+        <tr>
+            <td>{{ row.japanese }}</td>
+            <td>{{ row.reading }}</td>
+            <td>{{ row.reviews }}</td>
+            <td>
+                <div class="bar-wrap">
+                    <div class="bar" style="width: {{ row.accuracy_pct }}%"></div>
+                    <span>{{ row.accuracy_pct }}%</span>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No reviews yet. <a href="/quiz">Start a quiz!</a></p>
+{% endif %}
+{% endblock %}

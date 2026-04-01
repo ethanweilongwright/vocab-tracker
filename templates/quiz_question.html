@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Quiz <span class="progress-label">{{ current }}/{{ total }}</span></h1>
+
+<div class="quiz-card">
+    <div class="quiz-word">{{ word.japanese }}</div>
+    <div class="quiz-reading">{{ word.reading }}</div>
+
+    <form method="POST" action="/quiz/answer" id="quiz-form">
+        <input type="hidden" name="word_id" value="{{ word.id }}">
+        <input type="text" name="answer" id="answer-input"
+               placeholder="Type the meaning..." autocomplete="off" autofocus>
+        <button class="btn btn-primary" type="submit">Submit</button>
+        <p class="hint">Press Enter to submit</p>
+    </form>
+</div>
+
+<script>
+    document.getElementById("answer-input").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            document.getElementById("quiz-form").submit();
+        }
+    });
+</script>
+{% endblock %}
