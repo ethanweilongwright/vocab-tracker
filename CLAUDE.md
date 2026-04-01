@@ -54,6 +54,29 @@ vocab-tracker/
     └── test_stats.py
 ```
 
+## Next Steps
+
+### Japanese Dictionary Search (Priority)
+Add a dictionary lookup feature so the user can type a Japanese word and have the reading and meaning filled in automatically — no manual entry needed.
+
+**Approach:**
+- Use the free [Jisho API](https://jisho.org/api/v1/search/words?keyword=食べる) — no API key required
+- Add a `src/dictionary.py` module with a `lookup(word)` function that calls the API and returns the best match
+- On the Words page, add a "Search dictionary" input that fetches suggestions and pre-fills the add form
+- Gracefully fall back to manual entry if the word isn't found or the API is unavailable
+
+**Key fields from Jisho response:**
+- `data[0].japanese[0].reading` → hiragana reading
+- `data[0].senses[0].english_definitions` → list of English meanings (join with ", ")
+- `data[0].japanese[0].word` → kanji form
+
+**Files to create/edit:**
+- `src/dictionary.py` — API lookup logic
+- `app.py` — new route `GET /words/lookup?q=食べる` returning JSON
+- `templates/words.html` — search box with JS fetch to call the lookup route and pre-fill the form
+
+---
+
 ## Spaced repetition algorithm
 - Correct answer: `interval_days *= 2.5`
 - Wrong answer: `interval_days = 1.0`
